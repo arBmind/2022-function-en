@@ -1,0 +1,1825 @@
+= [language-cpp]#`std::function`#: a deep dive behind the curtain
+:author: Andreas Reischuck
+:twitter: @arBmind
+:!avatar: andreas.png
+:!organization: HicknHack Software GmbH
+:!sectids:
+:imagesdir: images
+:icons: font
+:use-link-attrs:
+:title-separator: :
+:codedir: code
+:!data-uri:
+:docinfo2:
+
+*Meeting C++ 2022*
+
+++++
+<svg class="overlay build" viewBox="0 0 1280 720" width="1920" height="1080">
+    <g class="hnhlogo" transform="translate(25 585) scale(1.5)" fill="#000">
+        <path
+            d="M79.685,34.532c-0.089-1.892-0.292-6.161-0.325-6.321c-0.042-0.205-1.77,0.488-4.821,0.488s-4.779-0.693-4.821-0.488 c-0.034,0.16-0.236,4.43-0.325,6.321h-1.914c-0.089-1.892-0.292-6.161-0.325-6.321c-0.042-0.205-1.77,0.488-4.821,0.488 c-3.051,0-4.779-0.693-4.821-0.488c-0.034,0.16-0.236,4.43-0.325,6.321h-2.036c-0.071-1.465-0.146-2.236-0.184-2.53 c0.398,0.018,0.708,0.1,0.894,0.286c-0.125-3.061-5.282-1.542-5.824-1.814c-2.105-1.062-7.326-4.446-7.3-4.964 c0.025-0.519,3.891-5.347,3.891-5.347s5.273,5.521,5.868,5.55c0.595,0.029,10.304-3.535,9.11-0.417 c1.983-1.796,1.3-2.54,3.311-2.44c2.012,0.1,3.534-0.019,5.034,1.481c-0.276-2.359-3.314-2.723-5.488-2.831 c-2.174-0.108-10.564,2.398-11.272,2.516c-0.924,0.152-3.88-4.011-4.488-4.683c13.837,1.831,17.964-9.801,27.701-3.354 c4.177,2.766,9.031,2.019,14.046,9.322c-5.743-10.568-1.846-8.978-4.994-12.456c-2.51-2.772-10.083-2.087-15.497-6.585 C61.026-1.155,45.045-5.689,4.271,14.68c27.78-11.208,40.532,4.081,40.532,4.081s-4.413,6.747-4.434,7.174 C40.349,26.361,47,30.559,47,30.559s-2.461,0.233-2.285,2.011c0.167-0.167,0.352-0.279,0.548-0.357 c-0.041,0.389-0.102,1.121-0.16,2.32h-2.036c-0.089-1.892-0.292-6.161-0.325-6.321c-0.042-0.205-1.77,0.488-4.821,0.488 s-4.779-0.693-4.821-0.488c-0.034,0.16-0.236,4.43-0.325,6.321h-2.28c-0.088-1.892-0.292-6.161-0.325-6.321 c-0.042-0.205-1.769,0.488-4.821,0.488s-4.779-0.693-4.821-0.488c-0.034,0.16-0.236,4.43-0.325,6.321H0v4.822h100v-4.822H79.685z" />
+        <path
+            d="M4.212,42.94v5.025h4.871V42.94h2.949V56.02H9.083v-5.472H4.212v5.472H1.243V42.94H4.212z M18.526,43.892 c0,0.814-0.621,1.475-1.591,1.475c-0.931,0-1.552-0.66-1.533-1.475c-0.02-0.854,0.602-1.494,1.552-1.494 C17.905,42.397,18.506,43.037,18.526,43.892z M15.479,56.02V46.53h2.949v9.489H15.479z M28.822,55.787 c-0.524,0.232-1.514,0.446-2.639,0.446c-3.066,0-5.026-1.883-5.026-4.871c0-2.774,1.902-5.045,5.433-5.045 c0.776,0,1.63,0.136,2.251,0.368l-0.465,2.193c-0.35-0.156-0.874-0.291-1.649-0.291c-1.553,0-2.562,1.105-2.542,2.658 c0,1.746,1.165,2.658,2.601,2.658c0.699,0,1.242-0.116,1.688-0.311L28.822,55.787z M34.306,50.528h0.039 c0.213-0.389,0.446-0.777,0.679-1.146l1.921-2.853h3.551l-3.396,3.842l3.881,5.647h-3.629l-2.29-3.9l-0.757,0.932v2.969h-2.95 V42.242h2.95V50.528z M42.972,49.558c0-1.184-0.039-2.192-0.077-3.027h2.561l0.136,1.3h0.058c0.388-0.602,1.358-1.513,2.93-1.513 c1.94,0,3.396,1.28,3.396,4.075v5.627h-2.95v-5.259c0-1.223-0.427-2.057-1.494-2.057c-0.815,0-1.3,0.562-1.494,1.105 c-0.078,0.194-0.117,0.466-0.117,0.738v5.472h-2.95V49.558z M58.315,42.94v5.025h4.871V42.94h2.95V56.02h-2.95v-5.472h-4.871v5.472 h-2.969V42.94H58.315z M77.441,53.71c0,0.912,0.039,1.786,0.136,2.31h-2.658l-0.175-0.951h-0.058 c-0.621,0.757-1.591,1.165-2.717,1.165c-1.921,0-3.066-1.397-3.066-2.911c0-2.465,2.212-3.648,5.569-3.629v-0.136 c0-0.505-0.272-1.223-1.728-1.223c-0.97,0-1.999,0.33-2.62,0.718l-0.543-1.901c0.66-0.369,1.96-0.834,3.687-0.834 c3.164,0,4.172,1.862,4.172,4.094V53.71z M74.569,51.537c-1.552-0.02-2.755,0.35-2.755,1.494c0,0.757,0.504,1.125,1.164,1.125 c0.738,0,1.339-0.485,1.533-1.086c0.039-0.155,0.058-0.33,0.058-0.505V51.537z M87.797,55.787 c-0.524,0.232-1.514,0.446-2.639,0.446c-3.066,0-5.026-1.883-5.026-4.871c0-2.774,1.901-5.045,5.433-5.045 c0.776,0,1.63,0.136,2.251,0.368l-0.465,2.193c-0.35-0.156-0.874-0.291-1.65-0.291c-1.552,0-2.561,1.105-2.542,2.658 c0,1.746,1.165,2.658,2.601,2.658c0.698,0,1.242-0.116,1.688-0.311L87.797,55.787z M93.281,50.528h0.039 c0.213-0.389,0.446-0.777,0.679-1.146l1.921-2.853h3.551l-3.396,3.842l3.881,5.647h-3.629l-2.29-3.9l-0.757,0.932v2.969h-2.95 V42.242h2.95V50.528z M1.127,71.701c0.737,0.505,1.766,0.873,2.872,0.873c1.941,0,3.144-1.105,3.144-2.717 c0-1.475-0.757-2.328-2.639-3.065c-2.115-0.737-3.376-1.824-3.376-3.609c0-1.921,1.591-3.318,3.803-3.318 c1.222,0,2.154,0.33,2.6,0.621l-0.349,0.776c-0.349-0.253-1.184-0.622-2.309-0.622c-2.115,0-2.833,1.359-2.833,2.388 c0,1.455,0.834,2.192,2.716,2.931c2.154,0.873,3.299,1.843,3.299,3.803c0,1.902-1.358,3.609-4.152,3.609 c-1.125,0-2.445-0.388-3.125-0.893L1.127,71.701z M23.029,68.402c0,3.493-2.387,4.968-4.463,4.968 c-2.406,0-4.269-1.883-4.269-4.793c0-3.202,2.095-4.948,4.405-4.948C21.283,63.629,23.029,65.55,23.029,68.402z M15.229,68.519 c0,2.329,1.494,4.075,3.396,4.075c1.94,0,3.473-1.746,3.473-4.133c0-1.708-0.97-4.075-3.415-4.075 C16.315,64.386,15.229,66.521,15.229,68.519z M29.894,73.156v-8.577h-1.339v-0.737h1.339v-0.504c0-1.437,0.271-2.601,1.028-3.357 c0.562-0.562,1.339-0.815,2.057-0.815c0.602,0,1.125,0.155,1.397,0.311l-0.291,0.738c-0.252-0.137-0.621-0.272-1.184-0.272 c-1.727,0-2.095,1.592-2.095,3.377v0.523h2.503v0.737h-2.503v8.577H29.894z M40.812,61.785v2.057h2.659v0.737h-2.659v6.055 c0,1.184,0.369,1.94,1.358,1.94c0.485,0,0.834-0.077,1.067-0.155l0.117,0.719c-0.311,0.136-0.738,0.232-1.3,0.232 c-0.679,0-1.242-0.232-1.591-0.679c-0.427-0.485-0.582-1.262-0.582-2.213v-5.899h-1.572v-0.737h1.572v-1.707L40.812,61.785z M50.004,63.842l1.553,5.298c0.33,1.087,0.602,2.018,0.795,2.911h0.058c0.233-0.854,0.543-1.844,0.932-2.911l1.863-5.298h0.874 l1.785,5.259c0.369,1.126,0.66,2.077,0.912,2.95h0.039c0.194-0.873,0.485-1.805,0.834-2.931l1.669-5.278h0.951l-3.104,9.314h-0.815 l-1.746-5.181c-0.408-1.125-0.718-2.135-0.971-3.183h-0.039c-0.271,1.105-0.621,2.135-1.009,3.202l-1.863,5.161h-0.815 l-2.853-9.314H50.004z M74.411,70.944c0,0.737,0.039,1.494,0.136,2.212h-0.834l-0.136-1.339h-0.059 c-0.446,0.719-1.475,1.553-2.969,1.553c-1.863,0-2.736-1.319-2.736-2.562c0-2.154,1.902-3.454,5.686-3.415V67.16 c0-0.932-0.175-2.774-2.387-2.755c-0.815,0-1.669,0.213-2.329,0.698l-0.291-0.68c0.834-0.562,1.882-0.795,2.716-0.795 c2.698,0,3.202,2.018,3.202,3.687V70.944z M73.499,68.17c-2.038-0.059-4.715,0.252-4.715,2.483c0,1.339,0.893,1.94,1.863,1.94 c1.552,0,2.425-0.95,2.755-1.862c0.059-0.194,0.097-0.389,0.097-0.563V68.17z M81.876,66.637c0-0.932-0.039-1.902-0.078-2.795 h0.854l0.039,1.883h0.039c0.408-1.164,1.378-2.096,2.659-2.096c0.116,0,0.252,0.02,0.369,0.039v0.893 c-0.136-0.039-0.271-0.039-0.446-0.039c-1.281,0-2.192,1.106-2.445,2.601c-0.039,0.271-0.078,0.582-0.078,0.893v5.142h-0.912 V66.637z M91.961,68.402c0,2.988,1.63,4.152,3.551,4.152c1.358,0,2.057-0.271,2.581-0.523l0.233,0.737 c-0.349,0.194-1.3,0.602-2.93,0.602c-2.678,0-4.347-1.96-4.347-4.696c0-3.104,1.785-5.045,4.191-5.045 c3.047,0,3.629,2.872,3.629,4.211c0,0.252,0,0.407-0.039,0.562H91.961z M97.899,67.665c0.02-1.3-0.524-3.279-2.775-3.279 c-2.057,0-2.95,1.843-3.105,3.279H97.899z" />
+    </g>
+</svg>
+++++
+
+[.cue]
+****
+Welcome to my talk!
+
+I will give you a deep dive behind the curtain of std::function.
+
+Some words about myself…
+****
+
+== !
+
+image::andreas.png[role="center", width="400"]
+
+&nbsp;
+
+[%build]
+* Andreas Reischuck
+* @*arBmind*
+
+[.cue]
+****
+1. My Name is Andreas Reischuck
+2. … also known as arBmind on the interwebs.
+
+I give online and on-site trainings:
+
+* C++
+* Qt
+* Clean Code
+
+You can also hire my company…
+****
+
+== !
+
+image::hicknhackLogo_new_text.png[role="center", width="400"]
+
+&nbsp;
+
+[%build]
+* [.blue]_Help_ with C++, Qt and more
+* [.green]_Work_ with us
+
+[.cue]
+****
+… HicknHack Software!
+
+1. We help you to build better software!
+  * C++ Qt UIs
+  * and much more!
+
+2. We are always hiring!
+  * locally in Dresden
+  * or 100% remote in Germany
+
+Before we start a non expert disclaimer…
+****
+
+== Not an Expert
+
+[.badge]
+Disclaimer
+
+[.cue]
+****
+Like everybody on this planet, I am just learning!
+
+Take everything I say with the grain of salt.
+The code works, but might not be production ready.
+In fact I might have simplified it intendionally to bring my points accross.
+
+With all this taken care of, let us investigate std::function.
+****
+
+[.subtitle]
+== Let's go
+
+image::deepai_letsgo.jpg[role="background overlay", width="2048"]
+
+[.cue]
+****
+First, I would like to bring back your memories about normal C++ functions...
+****
+
+== Simple C++ function
+
+[source.lang-cpp%nested, cpp]
+----
+// nest++
+void basic_function() {}
+// nest--
+// nest++
+auto trailing_basic_function() -> void {}
+// nest--
+----
+
+[.cue]
+****
+0 - This is a very simple function in C++.
+
+1. Since C++11 we can also write it like this.
+  * Many C++ developers don't know this.
+  * It's called the trailing return type.
+  * It was added for consistency with lambda return types.
+
+Both variants are implementations of an actual function.
+****
+
+== Function signature are types
+
+[.build]
+--
+[source.lang-cpp%nested, cpp]
+----
+// nest++
+using VoidFunction = void();
+// nest--
+// nest++
+using TrailingVoidFunction = auto() -> void;
+// nest--
+----
+--
+
+[.cue]
+****
+In C++ function signatures are types.
+
+1. For a simple void function
+  * Basically: Leave out the name and body => function signature
+  * The function signature is a type.
+
+2. This also works with trailing return types…
+
+These signature types are cannot be stored in a variable.
+
+The compiler simply does not know the size.
+
+But we can  …
+****
+
+== Variable with pointer to function
+
+[source.lang-cpp%nested, cpp]
+----
+using VoidFunction = void();
+// nest++
+using VoidFunctionPtr = VoidFunction*;
+// nest--
+// nest++
+auto basic_function_ptr =
+  VoidFunctionPtr{&basic_function};
+// nest--
+
+// nest++
+basic_function_ptr(); // calls basic_function
+// nest--
+----
+
+[.cue]
+****
+0 - create a pointer to a function with this…
+
+1. Pointers can be stored in variables.
+  * address of a function is a function pointer.
+2. We can call the function pointer directly…
+  * No need to deference it.
+
+I hope this brings everyone on the same page here.
+
+Any questions so far?
+****
+
+== [language-cpp]#`constexpr`# function pointer
+
+[.build]
+--
+[source.lang-cpp%nested, cpp]
+----
+// nest++
+constexpr auto constexpr_basic_function_ptr =
+  VoidFunctionPtr{&basic_function};
+// nest--
+
+// nest++
+constexpr_basic_function_ptr();
+// nest--
+----
+--
+
+[.cue]
+****
+The compiler pretends to know the function pointers at compile time.
+
+1. We can store them as constexpr variables…
+2. ...and we can still call them in regular code.
+
+The function does not have to be constexpr. But the pointer to the function always is.
+
+Actual pointer might only be known when the kernel loaded our binary.
+
+This concludes the C++ function pointer introduction. To summarize…
+****
+
+== Summary
+
+[%build]
+* function signatures are types
+* we can store pointers to functions
+* function pointers are known at compile time
+
+[.cue]
+****
+1-2-3
+
+Questions?
+
+Okay then…
+****
+
+[.subtitle]
+== Why use [language-cpp]#`std::function`#?
+
+[.cue]
+****
+Why do we actually need std::function then?
+
+Let's consider the following example…
+****
+
+== Callback Example
+
+image::deepai_callback.jpg[role="center", width="512"]
+
+Button triggers callback when clicked.
+
+[.cue]
+****
+How should we implement a callback?
+
+For a simple example when a button is clicked.
+
+Pause!
+
+Let's try to use what we have learned so far…
+****
+
+== !
+
+Use Function Pointers
+
+[.cue]
+****
+We have just seen that we can store function pointers.
+Let's try that…
+****
+
+[.source]
+== !
+
+[source.lang-cpp%nested, cpp]
+----
+// nest++
+struct Button {
+  // nest++
+  VoidFunctionPtr clicked;
+  // nest--
+};
+// nest--
+// nest++
+struct EditDialog {
+  // nest++
+  Button okButton;
+  Button cancelButton;
+  // nest--
+
+  // nest++
+  void onOkClicked();
+  void onCancelClicked();
+  // nest--
+};
+// nest--
+----
+
+[.cue]
+****
+0 - Our Button should be a C++ class. I use struct to make the slide code shorter. This is not my recommendation.
+
+1. Store function pointer as member attribute.
+2. Let's use it! With a dialog with…
+3. … an ok and cancel button.
+4. react when a buttons is clicked.
+
+But this is a problem. We can only store a function pointer in the button. How do we know which dialog instance is meant?
+
+So the actual challenge now is…
+****
+
+== Challenge:
+
+How can we call the instance methods of Dialog on clicked?
+
+[.cue]
+****
+Any ideas?
+
+Pause!
+
+If function pointers is all we have. Our only option is to add arguments to our functions.
+
+Let's try that…
+****
+
+== !
+
+[source.lang-cpp%nested, cpp]
+----
+// nest++
+using VoidVoidPtrFunction = void(void*);
+// nest--
+// nest++
+struct Button {
+  // nest++
+  void* clicked_instance;
+  // nest--
+  // nest++
+  VoidVoidPtrFunction clicked;
+  // nest--
+};
+// nest--
+----
+
+[.cue]
+****
+0 - We don't know the type of thing that the button is used in.
+We extend the function with a void pointer argument.
+
+1. We extend the Button
+2. and store the pointer
+3. next to the function pointer.
+
+So we store two pointers per callback now.
+
+As we cannot know the concrete types. It's not type safe.
+****
+
+== Function Pointers
+
+[%build]
+* Extra pointer
+* C-Style Solution
+
+[.cue]
+****
+To summarize. It works but…
+
+1. We need an extra class pointer
+2. This is the C style solution.
+
+Don't use this if you can avoid it.
+
+But this is the benchmark we have be measured against.
+
+Can we do better with C++?
+****
+
+== !
+
+Object Oriented Approach
+
+[.cue]
+****
+Let's try some object oriented thinking here…
+****
+
+[.source]
+== !
+
+[source.lang-cpp%nested, cpp]
+----
+// nest++
+struct ClickableInterface {
+  // nest++
+  virtual ~ClickableInterface() = default;
+  // nest--
+  virtual void onClicked() = 0;
+};
+// nest--
+// nest++
+struct EditDialog {
+  // nest++
+  Button okButton;
+  Button cancelButton;
+  // nest--
+  // nest++
+  // Puh…
+  // nest--
+};
+// nest--
+----
+
+[.cue]
+****
+0 - Let's create a small interface for the Clickable callback.
+
+As it's very easy to shoot yourself in the foot with C++.
+
+1. We should never forget the virtual destructor.
+  Okay. Does this solve the issue?
+2. Let's consider again our dialog.
+3. It has two buttons.
+4. How do we implement this interface for each of the buttons?
+There are ways to do this, but they involve a lot of effort.
+
+Let's see where we are…
+****
+
+== Object Oriented Approach
+
+Clickable Interface
+
+[.cue]
+****
+This was not a fully working solution, yet.
+
+Before we get stuck here, try something else…
+****
+
+== !
+
+image::The_Elephant_in_the_Room_bigger.jpg[role="center", width="1024"]
+
+Use [language-cpp]#`std::function`#
+
+[.cue]
+****
+std function is obviously the solution…
+****
+
+[.source]
+== !
+
+[source.lang-cpp%nested, cpp]
+----
+// nest++
+#include <functional>
+// nest--
+// nest++
+using CallbackFunc = std::function<void()>;
+// nest--
+// nest++
+struct Button {
+  CallbackFunc clicked;
+};
+// nest--
+// nest++
+EditDialog::EditDialog() {
+  // nest++
+  okButton.clicked = [this]() {
+    this->onOkClicked();
+  };
+  // nest--
+}
+// nest--
+----
+
+[.cue]
+****
+0 - We include the necessary std header.
+
+1. type alias of a std function with our signature.
+2. Store it in our button.
+3. An finnally we can implement our dialog
+4. ...with a simple lambda that captures the this pointer and calls the correct member method.
+
+Yeah! Great!
+****
+
+== Use [language-cpp]#`std::function`#
+
+[%build]
+* [green]#✔# Typesafe
+* [green]#✔# Easy
+* [green]#😻# Nice
+
+[.cue]
+****
+1. std function is type safe
+2. very straight forward to use
+3. great stuff!
+
+This callback example is also the 90% use case.
+
+Questions?
+
+But there are some more demanding examples as well…
+****
+
+== Extreme Example
+
+image::deepai_happy_cpp_hackking.jpg[role="center", width="512"]
+
+Task Scheduler
+
+[.cue]
+****
+So consider when a button is clicked you want to compute something.
+
+For example decompress a video with many frames and auto.
+So we have many small computing tasks that should be scheduled on a CPU with finite amount of cores.
+
+That's what our scheduler is supposed to do.
+****
+
+== !
+
+[source.lang-cpp%nested, cpp]
+----
+// nest++
+struct Scheduler {
+  // nest++
+  // nest++
+  using Task = std::function<void()>;
+  // nest--
+
+  void queueUpTask(const Task&);
+  // nest--
+
+  // nest++
+private:
+  std::queue<Task> queue;
+  // nest--
+};
+// nest--
+----
+
+[.cue]
+****
+0 - We implement the scheduler as a C++ class.
+
+1. It needs an Api to queue up a new task.
+2. Each task can be a std function.
+  The task shoud be executed on a thread.
+3. Store all tasks in a queue.
+
+I hope you get the idea.
+
+All the arguments for each task are captured in the std function. Which might be much more than just a this pointer.
+
+Let's summarize…
+****
+
+== Summary
+
+[language-cpp]#`std::function`#
+
+[%build]
+* store any callable
+* type safe
+* small callables
+
+[.cue]
+****
+As we have seen in the examples…
+
+1. We can store any callable object. A lambda for the button handler or a big task like object.
+2. Unlike the C Solution it's type safe
+3. But most of our callables are small. Like calling a member function.
+
+std::function is a very useful thing! Good to have.
+
+Questions?
+
+Okay now we know it's useful. Let's look how this magic trick works…
+****
+
+== !
+
+image::deepai_curtain.jpg[role="center", width="1920"]
+
+[.subtitle]
+== Naive implemenation of [language-cpp]#`std::function`#
+
+[.cue]
+****
+We could jump directly to the source of the std libraries.
+
+But I suggest to keep these as our final bosses.
+
+Let us try to implement it on our own.
+****
+
+[.source]
+== Function template signature
+
+[.build]
+--
+[source%nested, cpp]
+----
+// nest++
+using IntFunction = Function<void(int)>;
+// nest--
+
+// nest++
+// nest_current
+template</*What goes here?*/>
+struct Function {};
+// nest--
+// nest++
+// nest_hidden
+template<class Signature>
+struct Function;
+// nest--
+
+// nest++
+// Partial Template Specialisation
+template<class Ret, class... Args>
+struct Function<Ret(Args...)> {};
+// nest--
+----
+--
+
+[.cue]
+****
+1. Start with the interface.
+2. We need a template
+  … Pause …
+3. Function signatures are just types.
+  * How to access return type and arguments?
+  * …Partial template specialisation…
+4. function template requires a type
+  * Implementation for function signature
+
+We get return type and all the argument types.
+
+Great start! What's next?
+
+We want our function to be callable…
+****
+
+[.source.s54x13]
+== Call Interface
+
+[.build]
+--
+[source.lang-cpp%nested, cpp]
+----
+template<class Ret, class... Args>
+struct Function<Ret(Args...)> {
+  // nest++
+  // nest_current
+  /*?*/ operator() (/*args? */) const {
+
+  }
+  // nest--
+  // nest++
+  // nest_hidden
+  Ret operator() (Args... args) const {
+    // nest++
+    return m_ptr->call((Args)args...);
+    // nest--
+  }
+  // nest--
+  // nest++
+  struct CallInterface {
+    virtual Ret call(Args...) = 0;
+  };
+  // nest--
+  // nest++
+  std::shared_ptr<CallInterface> m_ptr;
+  // nest--
+};
+----
+--
+
+[.cue]
+****
+1. Overload the C++ call operator.
+2. Take types from template arguments.
+  * Now what do we do inside?
+3. Forward the call to something that knows…
+  * Let's try OOP again...
+4. Simple interface as inner member struct.
+5. Store as shared pointer attribute.
+
+All we need now is an implementation for the interface…
+****
+
+[.source.s67x16]
+== Call Implementation
+
+[.build]
+--
+[source.lang-cpp%nested, cpp]
+----
+template<class Ret, class... Args>
+struct Function<Ret(Args...)> {                   //
+  // nest++
+  // nest_current
+  template<class Callable>
+  struct CallImpl;
+  // nest--
+  // nest++
+  // nest_hidden
+  template<class Callable>
+  struct CallImpl final : CallInterface {
+    // nest++
+    Callable m_callable;
+    // nest--
+    // nest++
+    Ret call(Args... args) override {
+      // nest++
+      // nest_current
+      return m_callable((Args)args...);
+      // nest--
+      // nest++
+      // nest_hidden
+      return std::invoke(m_callable, (Args)args...);
+      // nest--
+    }
+    // nest--
+  };
+  // nest--
+};
+----
+--
+
+[.cue]
+****
+The trick is that the interface implementation is specific to a concrete callable.
+
+1. Template with the actual callable type
+2. implement our call interface.
+3. Store an instance of the callable.
+4. and implement the interface…
+5. By invoking the callable with arguments.
+  * Neat!
+
+5 - Use std::invoke to call any invokable.
+
+The only missing function part is now the constructor…
+****
+
+[.source.s54x13]
+== Constructor
+
+[.build]
+--
+[source.lang-cpp%nested, cpp]
+----
+template<class Ret, class... Args>
+struct Function<Ret(Args...)> {
+  // nest++
+  template<class Callable>
+  // nest++
+  requires(!std::is_same_v<Callable, Function>)
+  // nest--
+  Function(const Callable& callable)
+  // nest--
+  // nest++
+    : m_ptr{new CallImpl<Callable>{callable}} {}
+  // nest--
+  // nest++
+  /*snip*/
+  CallImpl(const Callable& callable)
+    : m_callable{callable} {}
+  // nest--
+};
+----
+--
+
+[.cue]
+****
+Constructor should allow any callable type.
+
+1. So we template the constructor…
+2. Not accidentally create a new copy constructor.
+  * So callable schould not be Function.
+3. Construct an instance of the CallImpl
+  * store it in our shared pointer.
+4. CallImpl needs a constructor as well.
+
+And now? All works!
+
+Good job!
+
+Here is all the code again…
+****
+
+[.source.s90x30]
+== Naive Function Code
+
+[source.lang-cpp, cpp]
+----
+#include <memory>
+
+template<class Signature> struct Function;
+
+template<class Ret, class... Args>
+struct Function<Ret(Args...)> {
+  Function() = default;
+  template<class Callable>
+  requires(!std::is_same_v<Callable, Function>)
+  Function(const Callable& callable) : m_ptr{new CallImpl<Callable>{callable}} {}
+
+  Ret operator() (Args... args) const { return m_ptr->call((Args)args...); }
+
+private:
+  struct CallInterface {
+    virtual Ret call(Args...) = 0;
+  };
+  template<class Callable>
+  struct CallImpl final : CallInterface {
+    Callable m_callable;
+    CallImpl(const Callable& callable) : m_callable{callable} {}
+
+    Ret call(Args... args) override { return std::invoke(m_callable, (Args)args...); }
+  };
+  std::shared_ptr<CallInterface> m_ptr;
+};
+----
+
+[.cue]
+****
+Enough to our Callback and Scheduler examples.
+
+* Good example of a type erasure.
+* Our Function class template can be instantiated with any callable.
+* As long as the call signature matches.
+
+Let's summarize…
+****
+
+== Summary
+
+[%build]
+* partial template specialisation
+* call interface
+* shared pointer to call interface
+* templated implementation
+
+[.cue]
+****
+1. We used partial template specialisation to extract the arguments from the function signature type
+2. Small call interface for the extracted signature
+3. We stored a shared pointer to the interface.
+4. The implementation of the call interface a template for the specific callable
+
+So it works for our use cases.
+
+Questions to our implementation?
+****
+
+
+[.subtitle]
+== [language-cpp]#`std::function`# interface
+
+[.cue]
+****
+Maybe we missed some of that the standard defined…
+****
+
+== We have some already…
+
+[%build]
+* [green]#✔# "template signature"
+* [green]#✔# "store, copy, and invoke any CopyConstructible Callable"
+* [green]#✔# call "[language-cpp]#`operator()`#"
+
+[.cue]
+****
+But some we got right:
+
+1. Our template signature matches.
+2. We can handle any callable.
+3. We have the call operator.
+
+Let's look at some other requirements:
+****
+
+== Empty State
+
+[quote,cppreference.com]
+____
+If a std::function contains no target, it is called empty.
+
+Invoking the target of an empty std::function results in std::bad_function_call exception being thrown.
+____
+
+[.cue]
+****
+If nothing is stored our function object is empty.
+
+But throwing an exception in this case might be a really bad idea.
+This makes the standard implementation unusable in many real time scenarios.
+
+If you ask me: it should do nothing and default construct the result and if that's not possible it's undefined behaviour.
+
+This empty state brings some other APIs…
+****
+
+== Operator bool
+
+[source.lang-cpp%nested, cpp]
+----
+// nest++
+explicit operator bool() const noexcept {
+  // nest++
+  return m_ptr;
+  // nest--
+}
+// nest--
+----
+
+[.cue]
+****
+To be able to check for the empty state we have an explicit operator bool.
+
+shared ptr does the same. So the implemenation is easy for us.
+****
+
+== Nullptr Constructor
+
+[source.lang-cpp%nested, cpp]
+----
+// nest++
+Function(std::nullptr_t) noexcept {}
+// nest--
+
+// nest++
+Function& operator=(std::nullptr_t) noexcept {
+  // nest++
+  m_ptr.reset();
+  return *this;
+  // nest--
+}
+// nest--
+----
+
+[.cue]
+****
+0 - We can explicitly construct a function from nullptr to get the empty state.
+
+1 - We can also assign nullptr to the function object.
+
+Since nullptr is considered the empty state, we can also compare against them…
+****
+
+== Nullptr Comparison
+
+[source.lang-cpp%nested, cpp]
+----
+// nest++
+// nest++
+// note: C++20 generates other variants!
+// nest--
+template<class Sig>
+bool operator==(const Function<Sig>& f,
+                std::nullptr_t) noexcept {
+  // nest++
+  return !f;
+  // nest--
+}
+// nest--
+----
+
+[.cue]
+****
+1 - Since C++20 all other overloads are generated by the compiler.
+
+As a side note, we cannot compare two function objects against each other.
+If you need that you are out of luck with std::function.
+
+nullptr as an empty indicator might be discussed.
+But we can live with that.
+
+So far so reasonable.
+
+Swap is implemented a bit strange…
+****
+
+[.source]
+== Swap
+
+[source.lang-cpp%nested, cpp]
+----
+// nest++
+void swap(Function& other) noexcept {
+  // nest++
+  std::swap(m_ptr, other.m_ptr);
+  // nest--
+}
+// nest--
+
+// nest++
+template<class Sig>
+void swap(Function<Sig> &lhs,
+          Function<Sig> &rhs) noexcept {
+  // nest++
+  lhs.swap(rhs);
+  // nest--
+}
+// nest--
+----
+
+[.cue]
+****
+0 - First we have a member function swap.
+
+1 - We can easily implement that with swapping our only shared pointer.
+
+2 - Then we have the std::swap overload, that calls the member function.
+
+Next we have some member types we shoud expose…
+****
+
+== Member Types
+
+[source.lang-cpp%nested, cpp]
+----
+// nest++
+using result_type = Ret;
+// nest--
+
+// nest++
+// deprecated in C++17, removed in C++20:
+// using argument_type,
+// using first_argument_type
+// using second_argument_type;
+// nest--
+----
+
+[.cue]
+****
+0 - Basically only the result type is required now.
+
+1 - All the others have been deprecated and removed.
+
+In C++17 also all API functions for allocator support were removed.
+
+All these removals seem strange.
+Maybe the API was designed in a rush.
+
+But we have some niceties left…
+****
+
+== Member pointers
+
+[quote,cppreference.com]
+____
+… as well as pointers to member functions and pointers to data members.
+____
+
+[.cue]
+****
+Standard functions can not only handle functions but also member functions and data members as well.
+
+What does this actually mean?
+
+Let's try to use this feature…
+****
+
+[.source.s67x16]
+== Data member pointer usage
+
+[%build]
+--
+[source.lang-cpp%nested, cpp]
+----
+#include <functional>
+
+// nest++
+struct Example {
+  // nest++
+  int memberData = 2;
+  // nest--
+};
+// nest--
+// nest++
+using F = std::function<int(Example*)>;
+// nest--
+
+// nest++
+int main() {
+  auto example = Example{};
+  // nest++
+  auto dataFunc = F{&Example::memberData};
+  // nest--
+  // nest++
+  std::cout << dataFunc(&example) << '\n';
+  // nest--
+}
+// nest--
+----
+--
+
+[.cue]
+****
+1. Include standard header.
+2. We need some members. Define a struct
+3. With a public data member
+4. std function with pointer argument
+5. Instance of example
+6. std function instance of our member data.
+7. invoke it with a pointer to our example.
+
+member functions look similar…
+****
+
+[.source.s67x16]
+== Member function pointer usage
+
+[source.lang-cpp%nested, cpp]
+----
+#include <functional>
+
+struct Example {
+  // nest++
+  int memberFunction() { return 3; }
+  // nest--
+};
+using F = std::function<int(Example*)>;
+
+int main() {
+  auto example = Example{};
+  // nest++
+  auto memberFunc = F{&Example::memberFunction};
+  // nest--
+  // nest++
+  std::cout << memberFunc(&example) << '\n';
+  // nest--
+}
+----
+
+[.cue]
+****
+0 - member function instead of data member
+
+1. Same Function to member function
+2. Invoke like any function object
+
+By using std::invoke we get this feature for free.
+
+But is it actually useful?
+
+I don't know. Did anyone had a use case for that?
+
+… Pause …
+
+We have one strange feature left…
+****
+
+== Target type
+
+[source.lang-cpp%nested, cpp]
+----
+// nest++
+const std::type_info& target_type() const noexcept;
+// nest--
+
+// nest++
+template<class T> T* target() noexcept;
+template<class T> const T* target() const noexcept;
+// nest--
+----
+
+[.cue]
+****
+0 - Query the stored callable type in a std function
+
+note: Requires run time type information (RTTI)
+
+1. target member function
+  * given the correct type T returns a pointer to the stored callable.
+
+>99% of instances make no use of this feature
+
+We pay for the RTTI part anyways.
+
+So let's summarize the std interface…
+****
+
+== Summary [language-cpp]#`std::function`# interface
+
+[%build]
+* [red]#🤦‍♀️# empty state
+* [green]#✔#? nullptr as empty placeholder
+* 🤔 swap
+* [green]#✔#? member pointers
+* [red]#❌# target type
+
+[.cue]
+****
+We had the basic stuff covered.
+
+1. Empty state with exceptions is questionable
+2. nullptr was easy to implement
+3. Swap was a bit strange, but easy to implement
+4. Member pointers come for free with std::invoke
+5. Target types seem barely useful.
+  * I did not bother to show implementation.
+
+Questions on this? … Pause!
+
+* If we satisfy all of these are we done yet?
+* Well *yes*, but there is a recommendations.
+****
+
+== !
+
+[quote,C++ Standard]
+____
+Recommended practice: Implementations should avoid the use of dynamically allocated memory for small callable objects, for example, where f's target is an object holding only a pointer or reference to an object and a member function pointer.
+____
+
+[.cue]
+****
+To paraphrasy the standard.
+
+* reduce dynamic memory allocation
+* Not worse than the C solution
+
+Using std::shared_ptr does not satisfy this
+
+So it's time to take a look at all the other attempts…
+****
+
+
+[.subtitle]
+== Comparison
+
+== Other Implementations
+
+[%build]
+* "MS-STL" by Microsoft
+* "libstdc++" by GCC project
+* "libc++" by LLVM project
+* "fb-folly" by Facebook
+* "function2" by Naios
+
+[.cue]
+****
+1. Microsoft
+2. GCC standard library
+3. LLVM is has different implemenation
+4. Facebook folly as a popular alternative
+5. Function2 has many features
+
+I will not include my experiments as these are tailored and not widely used.
+****
+
+== !
+
+image::Sonic_amilibo.jpg[role="center", width="1800"]
+
+[.cue]
+****
+You want to go fast!
+****
+
+== Runtime
+
+[%build]
+* call the function
+* construct
+* destruct, copy, move
+
+[.cue]
+****
+Runtime charts have been canceled here!
+
+There are too many variables
+
+1. How long does a call take?
+   * depends haevily on cache state
+   * flush and repeat are unrealistic
+2. Time for construction
+   * will depend on size of your functor
+3. Same for destruction, Copy or Move
+
+Measure your use case!
+****
+
+== !
+
+image::HummingBird-BY-SA-2.0.jpg[role="center", width="1800"]
+
+[.cue]
+****
+Low hanging fruits here.
+
+Memory is always a contraint.
+
+* Caches are sparse
+****
+
+== Small Object Optimization
+
+[%header,cols="3*>"]
+|===
+| Contestant |      x86_32 |  x86_64
+|     MS-STL |     #8+2 ptr# | #6+2 ptr#
+|  libstdc++ | |
+|     libc++ | |
+|   fb-folly | |
+|  function2 | |
+|===
+
+[.cue]
+****
+* MS-STL: 6 pointers plus 16 bytes
+** 1 pointer overhead
+
+* On 32bits we have 40 bytes total or 10 pointers. 9 for functor + 1 overhead.
+* On 64bits we have 64 bytes total or 8 pointers.
+****
+
+== Small Object Optimization
+
+[%header,cols="3*>"]
+|===
+| Contestant |      x86_32 |  x86_64
+|     MS-STL |     8+2 ptr | 6+2 ptr
+|  libstdc++ |     #2+2 ptr# | #2+2 ptr#
+|     libc++ | |
+|   fb-folly | |
+|  function2 | |
+|===
+
+[.cue]
+****
+* lib-std-c++: 2 pointers for functor
+** 2 pointers overhead
+****
+
+== Small Object Optimization
+
+[%header,cols="3*>"]
+|===
+| Contestant |      x86_32 |  x86_64
+|     MS-STL |     8+2 ptr | 6+2 ptr
+|  libstdc++ |     2+2 ptr | 2+2 ptr
+|     libc++ |     #2+? ptr# | #2+4 ptr#
+|   fb-folly | |
+|  function2 | |
+|===
+
+[.cue]
+****
+* lib-c++: does not compile on 32 bits
+** 2 pointers and 4 pointers overhead
+****
+
+== Small Object Optimization
+
+[%header,cols="3*>"]
+|===
+| Contestant |      x86_32 |  x86_64
+|     MS-STL |     8+2 ptr | 6+2 ptr
+|  libstdc++ |     2+2 ptr | 2+2 ptr
+|     libc++ |     2+? ptr | 2+4 ptr
+|   fb-folly |     #6+2 ptr# | #6+2 ptr#
+|  function2 |  |
+|===
+
+[.cue]
+****
+* fb-folly: 8 pointers including 2 as overhead
+****
+
+== Small Object Optimization
+
+[%header,cols="3*>"]
+|===
+| Contestant |      x86_32 |  x86_64
+|     MS-STL |     8+2 ptr | 6+2 ptr
+|  libstdc++ |     2+2 ptr | 2+2 ptr
+|     libc++ |     2+? ptr | 2+4 ptr
+|   fb-folly |     6+2 ptr | 6+2 ptr
+|  function2 |   #6+2 ptr# | #2+2 ptr#
+|===
+
+[.cue]
+****
+* function2: tries to keep size to 32 bytes
+
+Remember: 90% use case uses 2 pointers in C
+
+This looks really bad for C++ here.
+****
+
+
+[.subtitle]
+== Possible Extensions
+
+image::deepai_extensions.jpg[role="center", width="512"]
+
+== Customize call qualifiers
+
+[source.lang-cpp%nested, cpp]
+----
+// nest++
+using F2 = fu2::function<void(int) noexcept>;
+// nest--
+
+// nest++
+// template instance pseudo code:
+// nest--
+// nest++
+void function::operator() (int) const noexcept;
+// nest--
+// nest++
+template<class Callable>
+// nest++
+requires(noexcept(Callable))
+// nest--
+function(Callable&);
+// nest--
+----
+
+[.cue]
+****
+0 - Example: Require that function is noexcept
+
+What should this mean?
+
+1. Some Pseudo code
+2. The call operator becomes noexcept
+3. The constructor…
+4. …requires the callable noexcept
+
+Extend for const/non-const functors?
+****
+
+[.source.s54x13]
+== Multiple Overloads
+
+[source.lang-cpp%nested, cpp]
+----
+// nest++
+using F2 = fu::function<void(int), void(float)>;
+// nest--
+// nest++
+struct Example {
+  // nest++
+  void operator() (int x) {
+    std::print("int: {}\n", x); }
+  void operator() (double x) {
+    std::print("double: {}\n", x); }
+  // nest--
+};
+// nest--
+// nest++
+auto f2 = F2{Example{}};
+// nest--
+// nest++
+f2(2);
+// nest--
+// nest++
+f2(3.14);
+// nest--
+----
+
+[.cue]
+****
+0 - Example: Callable with two overloads
+
+1. We have an example struct
+2. With int and double function operators
+3. An instance
+4. Is callable with int
+5. And double
+****
+
+== More Ideas
+
+[%build]
+* move only (fu2 & C++23)
+* non-owning (fu2)
+* custom small buffer size (fu2)
+* PMR allocators (fu2)
+* customize empty handling (fu2)
+* constexpr usage
+* disable allocations
+* C-API adapter
+
+[.cue]
+****
+Some more ideas…
+
+1. Do not require functor to be copyable
+2. Behave like a pointer or view
+3. Tune the small buffer size
+4. Allocate using a custom strategy
+5. Avoid exceptions on empty state
+6. Allow callbacks during compile time
+7. Fail to compile if buffer is exceeded
+8. Convert to function pointer and context for C-APIs
+****
+
+== [language-cpp]#`std::move_only_function`#
+
+[%build]
+* no copy support
+* [green]#✔# forwards call qualifiers correctly
+* [green]#✔# can store and invoke any constructible Callable
+* [green]#✔# support for inplace construction
+* [green]#✔# no more RTTI [language-cpp]#`target_type()`# or [language-cpp]#`target()`#
+
+[.cue]
+****
+Let's take a look at C++23 move-only-function
+
+1. No Copy for functor required
+2. Forwards call qualifiers as shown
+3. Keeps support for any callable
+4. Allows to inplace construct the callable
+5. Functions for RTTI were removed
+
+libstdc++ uses 40 bytes. 3 pointers for functor, 2 pointers overhead.
+****
+
+
+
+
+
+
+
+
+== Summary
+
+[%build]
+* function signatures are types
+* [language-cpp]#`std::function`# is useful
+* the world is bigger than std c++
+* [language-cpp]#`std::move_only_function`# in C++23
+
+[.cue]
+****
+****
+
+
+== !
+
+image::andreas.png[role="center", width="400"]
+
+&nbsp;
+
+[%build]
+* Andreas Reischuck
+* @*arBmind*
+
+[.cue]
+****
+1. My Name is Andreas Reischuck
+2. … also known as arBmind on the interwebs.
+
+I give online and on-site trainings:
+
+* C++
+* Qt
+* Clean Code
+
+You can also hire my company…
+****
+
+== !
+
+image::hicknhackLogo_new_text.png[role="center", width="400"]
+
+&nbsp;
+
+[%build]
+* [.blue]_Help_ with C++, Qt and more
+* [.green]_Work_ with us
+
+[.cue]
+****
+… HicknHack Software!
+
+1. We help you to build better software!
+  * C++ Qt UIs
+  * and much more!
+
+2. We are always hiring!
+  * locally in Dresden
+  * or 100% remote in Germany
+
+Speaking of Dresden.
+****
+
+== !
+
+image::cppug.png[role="pull-right", width="550"]
+
+&nbsp;
+
+Give a [.green]*Talk* +
+=> get a *Dresden* tour
+
+[.cue]
+****
+* We want to restart the C++ usergroup in Dresden in 2023.
+* It had to pause in 2022 because we ran out of speakers!
+* We need more active speakers for that!
+
+Please contact me in any form.
+
+* Video Recording
+* personal city tour
+* I visit your local usergroup
+****
+
+== !
+
+image::rebuild_logo.png[role="pull-left", width="450"]
+
+*Rebuild* language project
+
+[.bigger]
+&nbsp;
+
+[.center]
+[.green]__Collaborate__
+
+[.cue]
+****
+Another topic of my heart!
+
+* improved language & tools for everybody
+* Compiler built with C++20
+
+If you are interested in language work I would like to get in contact with you!
+
+****
+
+
+[.subtitle]
+== Hack more & learn everything!
+
+[.cue]
+****
+… and talk about it!
+****
+
+== !
+
+Photo Credits
+
+[.small.hd]
+* link:https://flic.kr/p/nNWNY[Bit Boy: The Elephant in the room] link:https://creativecommons.org/licenses/by-sa/2.0[(cc-by-sa-license)]
+* link:https://flic.kr/p/vtxD4A[Farley Santos: Sonic ambilibo] link:https://creativecommons.org/licenses/by-sa/2.0[(cc-by-sa-license)]
+* link:https://flic.kr/p/25A4Ah3[Mike's Birds: Hummingbird] link:https://creativecommons.org/licenses/by-sa/2.0[(cc-by-sa-license)]
+
+
+[.subtitle]
+== std::function: [white]#a deep dive behind the curtain#
+
+[language-cpp]#`co_await question_ready()`#
+
+[.cue]
+****
+Thank you for your attention!
+
+Now we are free to discuss any questions.
+****
+
+
+[.subtitle]
+== Bonus Quiz
+
+image::deepai_puzzle.jpg[role="pull-left", width="512"]
+
+== What is the size? (1)
+
+[source.lang-cpp%nested, cpp]
+----
+int demo(double x) {
+  return static_cast<int>(x);
+}
+
+int main() {
+// nest++
+  std::cout << sizeof(demo);
+// nest--
+}
+----
+
+[.cue]
+****
+Size of the function is undefined.
+All compilers reject that.
+
+gcc has option to allow this. would print 1.
+****
+
+== What is the size? (2)
+
+[source.lang-cpp%nested, cpp]
+----
+int demo(double x) {
+  return static_cast<int>(x);
+}
+
+int main() {
+  auto ptr = &demo;
+// nest++
+  std::cout << sizeof(ptr);
+// nest--
+}
+----
+
+[.cue]
+****
+That's just a normal pointer.
+
+8 bytes on 64 bits.
+4 bytes on 32 bits.
+****
+
+[.source.s54x13]
+== What is the size? (3)
+
+[source.lang-cpp%nested, cpp]
+----
+struct Demo {
+  int memberFunc(double x) {
+    return static_cast<int>(x);
+  }
+};
+
+int main() {
+  auto ptr = &Demo::memberFunc;
+// nest++
+// nest_current
+  std::cout << sizeof(ptr);
+// nest--
+// nest++
+// nest_hidden
+  Demo demo{};
+  std::cout << (demo.*ptr)(3.14);
+// nest--
+}
+----
+
+[.cue]
+****
+Compiler dependant.
+
+* clang/gcc use 2 pointers.
+* msvc uses 1 pointer.
+
+notice that msvc decided they need more space.
+****
+
+[.source.s67x16]
+== Reduce Size for members
+
+[source.lang-cpp%nested, cpp]
+----
+struct Demo {
+  int memberFunc(double x) {
+    return static_cast<int>(x);
+  }
+};
+// nest++
+using DemoFunc = int(Demo*, double);
+// nest--
+// nest++
+constexpr DemoFunc* ptr = [](Demo* demo, double x) {
+    return demo->memberFunc(x);
+  };
+// nest--
+
+int main() {
+// nest++
+// nest_current
+  std::cout << sizeof(ptr);
+// nest--
+// nest++
+// nest_hidden
+  Demo demo{};
+  std::cout << ptr(&demo, 3.14);
+// nest--
+}
+----
+
+[.cue]
+****
+To call a member function:
+* object pointer for this
+* arguments
+
+A Lambda without a capture is just a function pointer.
+
+****
+
+[.subtitle]
+== `std::exit(0)`

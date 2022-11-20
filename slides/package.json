@@ -1,0 +1,54 @@
+{
+  "name": "test_presentation",
+  "description": "Just testing bespoke",
+  "author": "Andreas Reischuck",
+  "license": "MIT",
+  "version": "1.0.0",
+  "dependencies": {
+    "natives": "^1.1.6"
+  },
+  "devDependencies": {
+    "bespoke": "^1.1.0",
+    "bespoke-blackout": "^1.0.1",
+    "bespoke-bullets": "github:arBmind/bespoke-bullets#patches",
+    "bespoke-classes": "^1.0.0",
+    "bespoke-cursor": "^1.0.3",
+    "bespoke-fullscreen": "^1.0.0",
+    "bespoke-hash": "github:arBmind/bespoke-hash#patch-1",
+    "bespoke-nav": "^1.0.2",
+    "bespoke-onstage": "github:arBmind/bespoke-onstage#patches",
+    "bespoke-overview": "^1.0.5",
+    "bespoke-progress": "^1.0.0",
+    "bespoke-scale": "^1.0.1",
+    "bespoke-slidenumber": "^0.1.0",
+    "bespoke-title": "^1.0.0",
+    "browserify": "^16.2.3",
+    "del": "^3.0.0",
+    "gulp": "^3.9.1",
+    "gulp-autoprefixer": "6.0.0",
+    "gulp-chmod": "^2.0.0",
+    "gulp-connect": "^5.7.0",
+    "gulp-csso": "^3.0.1",
+    "gulp-exec": "^3.0.2",
+    "gulp-jade": "^1.1.0",
+    "gulp-plumber": "^1.2.1",
+    "gulp-rename": "^1.4.0",
+    "gulp-stylus": "^2.7.0",
+    "gulp-uglify": "^3.0.1",
+    "gulp-util": "^3.0.8",
+    "normalizecss": "^3.0.0",
+    "prismjs": "^1.20.0",
+    "through": "^2.3.8",
+    "vinyl-buffer": "^1.0.1",
+    "vinyl-source-stream": "^2.0.0"
+  },
+  "resolutions": {
+    "graceful-fs": "^4.2.4"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "scripts": {
+    "dev": "gulp serve"
+  }
+}

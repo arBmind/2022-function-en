@@ -1,0 +1,74 @@
+h1, h2
+  font-weight 400
+  color $color-heading
+
+figure.quote {
+  /* Versatility: blockquote, p, h2... */
+  position: relative;
+
+  &:before {
+    content: '\201C';
+    font-family: arial, sans-serif;
+    font-size: 12rem;
+    height: 5.6rem;
+    left: -.8rem;
+    line-height: 1;
+    position: absolute;
+    text-align: center;
+    top: -4rem;
+    width: 5.6rem;
+  }
+
+  @media (min-width: 768px) {
+    padding-left: 6.4rem;
+
+    p {
+      font-size: 3.2rem;
+      line-height: 4.8rem;
+    }
+
+    &:before {
+      left: .8rem;
+      top: -1.6rem;
+    }
+  }
+}
+
+.small
+  font-size 0.5em
+.big
+  font-size 1.5em
+.green
+  color #3C3
+.blue
+  color #56E
+
+figure.image.overlay
+  position absolute
+  &.right
+    right 100px
+    bottom 50px
+  &.top
+    position absolute
+    top 50px
+  &.center
+    position absolute
+    top 50%
+    border solid 5px red
+    background #fff
+
+.badge
+  margin: 0
+  color: #fff
+  background: #718c00
+  font-size: 2em
+  position: absolute
+  right: -400px
+  top: -200px
+  transform: rotate(30deg)
+  -webkit-transform-origin: top left
+  -moz-transform-origin: top left
+  -o-transform-origin: top left
+  transform-origin: top left
+  white-space: nowrap
+  padding: 10px 350px
