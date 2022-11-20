@@ -4,7 +4,7 @@ Presentation for [Meeting C++ 2022](https://meetingcpp.com/2022) (17.-19. Novemb
 
 ## Slides
 
-Github pages (TODO)
+View slides: [https://arbmind.github.io/2022-function-en](https://arbmind.github.io/2022-function-en)
 
 ## Example Code
 
